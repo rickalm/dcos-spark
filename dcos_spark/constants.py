@@ -10,4 +10,4 @@ spark_executor_uri = (
 
 PATH_ENV = 'PATH'
 
-spark_mesos_image = "mesosphere/spark:1.4.0-SNAPSHOT-1cb86c7"
+spark_mesos_image = "mesosphere/spark:1.4.0-SNAPSHOT-b6b52fb"
