@@ -16,6 +16,7 @@ Options:
     --info                  Show info
     --version               Show version
 """
+from __future__ import print_function
 import docopt
 from dcos_spark import constants, discovery, spark_submit
 
@@ -40,11 +41,11 @@ def kill_job(args):
 
 
 def print_webui(args):
-    print discovery.get_spark_webui()
+    print(discovery.get_spark_webui())
     return 0
 
 def print_schema():
-    print "{}"
+    print("{}")
 
 def main():
     args = docopt.docopt(

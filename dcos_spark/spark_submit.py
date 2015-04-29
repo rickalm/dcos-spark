@@ -1,3 +1,4 @@
+from __future__ import print_function
 import json
 import os
 import os.path
@@ -33,7 +34,7 @@ def show_help():
     for line in stderr.split("\n"):
         if line.startswith("Usage:"):
             continue
-        print line
+        print(line)
 
     return 0
 
@@ -51,9 +52,9 @@ def submit_job(master, args):
 def job_status(master, submissionId):
     response = run(master, ["--status", submissionId])
     if response[0] is not None:
-        print "Submission ID: " + response[0]['submissionId']
-        print "Driver state: " + response[0]['driverState']
-        print "Last status: " + response[0]['message']
+        print("Submission ID: " + response[0]['submissionId'])
+        print("Driver state: " + response[0]['driverState'])
+        print("Last status: " + response[0]['message'])
     return response[1]
 
 
@@ -64,8 +65,8 @@ def kill_job(master, submissionId):
             success = "succeeded."
         else:
             success = "failed."
-        print "Kill job " + success
-        print "Message: " + response[0]['message']
+        print("Kill job " + success)
+        print("Message: " + response[0]['message'])
     return response[1]
 
 
@@ -116,7 +117,7 @@ def run(master, args, props = []):
     http://10.127.131.174:8000/spark-examples_2.10-1.3.0-SNAPSHOT.jar 30
     """
     if not check_java():
-        print "DCOS Spark requires Java to be installed. Please install JRE."
+        print("DCOS Spark requires Java to be installed. Please install JRE.")
         return (None, 1)
 
     submit_file = pkg_resources.resource_filename(
@@ -135,8 +136,8 @@ def run(master, args, props = []):
     stdout, stderr = process.communicate()
 
     if process.returncode != 0:
-        print "Spark submit failed:"
-        print stderr
+        print("Spark submit failed:")
+        print(stderr)
         return (None, process.returncode)
     else:
         response = json.loads(stderr[stderr.index('{')::])

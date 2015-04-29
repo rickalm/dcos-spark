@@ -1,5 +1,5 @@
+from __future__ import print_function
 import os
-
 import toml
 
 
@@ -12,5 +12,4 @@ def dcos_config():
 
 def marathon_uri():
     config = dcos_config()
-    print(config)
     return config
