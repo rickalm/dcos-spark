@@ -54,7 +54,8 @@ def job_status(master, submissionId):
     if response[0] is not None:
         print("Submission ID: " + response[0]['submissionId'])
         print("Driver state: " + response[0]['driverState'])
-        print("Last status: " + response[0]['message'])
+        if 'message' in response[0]:
+            print("Last status: " + response[0]['message'])
     return response[1]
 
 
