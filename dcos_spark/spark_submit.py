@@ -141,5 +141,6 @@ def run(master, args, props = []):
         print(stderr)
         return (None, process.returncode)
     else:
-        response = json.loads(stderr[stderr.index('{')::])
+        err = stderr.decode("utf-8")
+        response = json.loads(err[err.index('{'):err.index('}') + 1])
         return (response, process.returncode)
