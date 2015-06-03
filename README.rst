@@ -35,7 +35,7 @@ Configure Environment and Run
 
     dcos-spark help
 
-Invoking from the dev env includes the `dcos-spark`, however when this is included into DCOS it will be a subcommand of dcos and will be invoked by `dcos spark`.   `dcos-spark help` translates to `dcos spark help` when installed into the dcos-cli.
+When invoking dcos subcommands from the dev env it includes the :code:`dcos-` as a prefix, however when this is included into DCOS it will be a subcommand of dcos and will be invoked by :code:`dcos spark`.   :code:`dcos-spark help` translates to :code:`dcos spark help` when installed into the dcos-cli.
 
 Running Tests:
 --------------
