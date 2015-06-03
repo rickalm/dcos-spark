@@ -33,7 +33,9 @@ Configure Environment and Run
 
 #. Get started by calling the DCOS Spark CLI's help::
 
-    dcos spark help
+    dcos-spark help
+
+Invoking from the dev env includes the `dcos-spark`, however when this is included into DCOS it will be a subcommand of dcos and will be invoked by `dcos spark`.   `dcos-spark help` translates to `dcos spark help` when installed into the dcos-cli.
 
 Running Tests:
 --------------
