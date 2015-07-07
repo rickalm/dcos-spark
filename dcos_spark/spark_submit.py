@@ -103,8 +103,11 @@ def check_java():
 
     # Check if JAVA_HOME is set and find java
     java_home = os.environ.get('JAVA_HOME')
-    if java_home is not None and os.path.isfile(java_home + "/bin/java"):
-        return True
+
+    if java_home is not None:
+        java_path = os.path.join(java_home, "bin", "java")
+        if os.path.isfile(java_path):
+            return True
 
     return False
 
