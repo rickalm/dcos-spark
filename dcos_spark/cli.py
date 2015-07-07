@@ -6,7 +6,7 @@ Usage:
     dcos spark --version
     dcos spark --config-schema
     dcos spark run --help
-    dcos spark run --submit-args=<spark-args>
+    dcos spark run --submit-args=<spark-args> [--docker-image=<docker-image>]
     dcos spark status <submissionId>
     dcos spark kill <submissionId>
     dcos spark webui
@@ -26,7 +26,9 @@ def master():
 
 
 def run_spark_job(args):
-    return spark_submit.submit_job(master(), args['--submit-args'])
+    docker_image = args.get('--docker-image', constants.spark_mesos_image)
+    print(docker_image)
+    return spark_submit.submit_job(master(), args['--submit-args'], docker_image)
 
 def show_spark_submit_help():
     return spark_submit.show_help()

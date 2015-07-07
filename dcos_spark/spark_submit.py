@@ -39,9 +39,9 @@ def show_help():
     return 0
 
 
-def submit_job(master, args):
+def submit_job(master, args, docker_image):
     (props, args) = partition(args.split(" "), lambda a: a.startswith("-D"))
-    props = props + ["-Dspark.mesos.executor.docker.image=" + constants.spark_mesos_image]
+    props = props + ["-Dspark.mesos.executor.docker.image=" + docker_image]
     response = run(master, args, props)
     if response[0] is not None:
         print("Run job succeeded. Submission id: " +
