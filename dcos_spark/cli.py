@@ -27,7 +27,6 @@ def master():
 
 def run_spark_job(args):
     docker_image = args.get('--docker-image', constants.spark_mesos_image)
-    print(docker_image)
     return spark_submit.submit_job(master(), args['--submit-args'], docker_image)
 
 def show_spark_submit_help():
