@@ -31,7 +31,7 @@ def show_help():
 
     stdout, stderr = process.communicate()
 
-    for line in stderr.split("\n"):
+    for line in stderr.decode("utf-8").split("\n"):
         if line.startswith("Usage:"):
             continue
         print(line)
