@@ -39,28 +39,30 @@ def show_help():
     return 0
 
 
-def submit_job(master, args, docker_image):
+def submit_job(master, args, docker_image, verbose = False):
     (props, args) = partition(args.split(" "), lambda a: a.startswith("-D"))
     props = props + ["-Dspark.mesos.executor.docker.image=" + docker_image]
-    response = run(master, args, props)
+    response = run(master, args, verbose, props)
     if response[0] is not None:
         print("Run job succeeded. Submission id: " +
               response[0]['submissionId'])
     return response[1]
 
 
-def job_status(master, submissionId):
-    response = run(master, ["--status", submissionId])
+def job_status(master, submissionId, verbose = False):
+    response = run(master, ["--status", submissionId], verbose)
     if response[0] is not None:
         print("Submission ID: " + response[0]['submissionId'])
         print("Driver state: " + response[0]['driverState'])
         if 'message' in response[0]:
             print("Last status: " + response[0]['message'])
+    elif response[1] == 0:
+        print("Job id '" + submissionId + "' is not found")
     return response[1]
 
 
-def kill_job(master, submissionId):
-    response = run(master, ["--kill", submissionId])
+def kill_job(master, submissionId, verbose = False):
+    response = run(master, ["--kill", submissionId], verbose)
     if response[0] is not None:
         if bool(response[0]['success']):
             success = "succeeded."
@@ -112,7 +114,7 @@ def check_java():
     return False
 
 
-def run(master, args, props = []):
+def run(master, args, verbose, props = []):
     """
     This method runs spark_submit with the passed in parameters.
     ie: ./bin/spark-submit --deploy-mode cluster --class
@@ -139,11 +141,24 @@ def run(master, args, props = []):
 
     stdout, stderr = process.communicate()
 
+    if verbose is True:
+        print("Ran command: " + " ".join(command))
+        print("Stdout:")
+        print(stdout)
+        print("Stderr:")
+        print(stderr)
+
+    err = stderr.decode("utf-8")
     if process.returncode != 0:
+        if "500 Internal Server Error" in err:
+            print("Internal Error reaching Spark cluster endpoint")
+            return (None, process.returncode)
+
         print("Spark submit failed:")
         print(stderr)
         return (None, process.returncode)
     else:
-        err = stderr.decode("utf-8")
-        response = json.loads(err[err.index('{'):err.index('}') + 1])
-        return (response, process.returncode)
+        if "{" in err:
+            response = json.loads(err[err.index('{'):err.index('}') + 1])
+            return (response, process.returncode)
+        return (None, process.returncode)
