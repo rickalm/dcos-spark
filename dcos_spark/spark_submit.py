@@ -150,8 +150,12 @@ def run(master, args, verbose, props = []):
 
     err = stderr.decode("utf-8")
     if process.returncode != 0:
+        if "502 Bad Gateway" in err:
+            print("Spark service is not found in your DCOS cluster.")
+            return (None, process.returncode)
+
         if "500 Internal Server Error" in err:
-            print("Internal Error reaching Spark cluster endpoint")
+            print("Error reaching Spark cluster endpoint. Please make sure Spark service is in running state in Marathon.")
             return (None, process.returncode)
 
         print("Spark submit failed:")
@@ -159,6 +163,19 @@ def run(master, args, verbose, props = []):
         return (None, process.returncode)
     else:
         if "{" in err:
-            response = json.loads(err[err.index('{'):err.index('}') + 1])
+            lines = err.split(os.linesep)
+            jsonStr = ""
+            startScan = False
+            for l in lines:
+                if l.startswith("}") and startScan:
+                    jsonStr += l + os.linesep
+                    startScan = False
+                elif startScan:
+                    jsonStr += l + os.linesep
+                elif l.startswith("{"):
+                    startScan = True
+                    jsonStr += l + os.linesep
+
+            response = json.loads(jsonStr)
             return (response, process.returncode)
         return (None, process.returncode)
