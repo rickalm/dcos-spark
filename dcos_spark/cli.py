@@ -8,6 +8,7 @@ Usage:
     dcos spark run --help
     dcos spark run --submit-args=<spark-args> [--docker-image=<docker-image> --verbose]
     dcos spark status <submissionId> [--verbose]
+    dcos spark log <submissionId> [--follow --lines_count=<lines_count> --file=<file>]
     dcos spark kill <submissionId> [--verbose]
     dcos spark webui
 
@@ -18,7 +19,8 @@ Options:
 """
 from __future__ import print_function
 import docopt
-from dcos_spark import constants, discovery, spark_submit
+from dcos import mesos
+from dcos_spark import constants, discovery, spark_submit, log
 
 
 def master():
@@ -42,6 +44,17 @@ def job_status(args):
 def kill_job(args):
     return spark_submit.kill_job(master(), args['<submissionId>'], args['--verbose'])
 
+def log_job(args):
+     dcos_client = mesos.DCOSClient()
+     task = mesos.get_master(dcos_client).task(args['<submissionId>'])
+     log_file = args.get('--file', "stdout")
+     if log_file is None:
+         log_file = "stdout"
+     mesos_file = mesos.MesosFile(log_file, task=task, dcos_client=dcos_client)
+     lines_count = args.get('--lines_count', "10")
+     if lines_count is None:
+         lines_count = "10"
+     return log.log_files([mesos_file], args['--follow'], int(lines_count))
 
 def print_webui(args):
     print(discovery.get_spark_webui())
@@ -69,6 +82,8 @@ def main():
         return kill_job(args)
     elif args['webui']:
         return print_webui(args)
+    elif args['log']:
+        return log_job(args)
     else:
         print(__doc__)
         return 1

@@ -19,11 +19,13 @@ fi
 
 pip install -r $BASEDIR/requirements.txt
 
-if [ ! -d "$BASEDIR/dcos_spark/data/spark*" ]; then
+SPARK_VERSION=spark-1.4.1-bin-2.2.0
+
+if [ ! -d "$BASEDIR/dcos_spark/data/$SPARK_VERSION" ]; then
     pushd .
     cd $BASEDIR/dcos_spark/data
-    wget http://downloads.mesosphere.com.s3.amazonaws.com/assets/spark/spark-1.4.0-SNAPSHOT-bin-2.2.0.tgz
-    tar xvf spark-1.4.0-SNAPSHOT-bin-2.2.0.tgz
-    rm spark-1.4.0-SNAPSHOT-bin-2.2.0.tgz
+    wget http://downloads.mesosphere.com.s3.amazonaws.com/assets/spark/$SPARK_VERSION.tgz
+    tar xvf $SPARK_VERSION.tgz
+    rm $SPARK_VERSION.tgz
     popd
 fi
