@@ -98,10 +98,30 @@ def which(program):
     return None
 
 
+def check_java_version(java_path):
+    process = subprocess.Popen(
+        [java_path, "-version"],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE)
+
+    stdout, stderr = process.communicate()
+
+    lines = stderr.split(os.linesep)
+    if len(lines) == 0:
+        print("Unable to check java version, error: no output detected from " + java_path + " -version")
+        return False
+
+    if "1.7." not in lines[0]:
+        print("DCOS Spark requires Java 1.7.x to be installed, found " + lines[0])
+        return False
+
+    return True
+
+
 def check_java():
     # Check if JAVA is in the PATH
     if which('java') is not None:
-        return True
+        return check_java_version('java')
 
     # Check if JAVA_HOME is set and find java
     java_home = os.environ.get('JAVA_HOME')
@@ -109,8 +129,9 @@ def check_java():
     if java_home is not None:
         java_path = os.path.join(java_home, "bin", "java")
         if os.path.isfile(java_path):
-            return True
+            return check_java_version(java_path)
 
+    print("DCOS Spark requires Java 1.7.x to be installed, please install JRE")
     return False
 
 
@@ -123,7 +144,6 @@ def run(master, args, verbose, props = []):
     http://10.127.131.174:8000/spark-examples_2.10-1.3.0-SNAPSHOT.jar 30
     """
     if not check_java():
-        print("DCOS Spark requires Java to be installed. Please install JRE.")
         return (None, 1)
 
     submit_file = pkg_resources.resource_filename(
