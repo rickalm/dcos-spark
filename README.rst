@@ -39,7 +39,7 @@ When invoking dcos subcommands from the dev env it includes the :code:`dcos-` as
 
 #. Leaving the env
 
-	deactivate
+    deactivate
 
 Running Tests:
 --------------
