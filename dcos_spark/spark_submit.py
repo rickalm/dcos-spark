@@ -2,6 +2,7 @@ from __future__ import print_function
 import json
 import os
 import os.path
+import re
 import subprocess
 
 import pkg_resources
@@ -111,8 +112,9 @@ def check_java_version(java_path):
         print("Unable to check java version, error: no output detected from " + java_path + " -version")
         return False
 
-    if "1.7." not in lines[0]:
-        print("DCOS Spark requires Java 1.7.x to be installed, found " + lines[0])
+    match = re.search("1\.(\d+)", lines[0])
+    if match and int(match.group(1)) < 7:
+        print("DCOS Spark requires Java 1.7.x or greater to be installed, found " + lines[0])
         return False
 
     return True

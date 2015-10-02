@@ -19,7 +19,7 @@ fi
 
 pip install -r $BASEDIR/requirements.txt
 
-SPARK_VERSION=spark-1.4.1-bin-2.2.0
+SPARK_VERSION=spark-1.5.0-bin-2.4.0
 
 if [ ! -d "$BASEDIR/dcos_spark/data/$SPARK_VERSION" ]; then
     pushd .

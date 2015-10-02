@@ -1,7 +1,7 @@
-version = '0.2.0'
+version = '0.3.0'
 """DCOS Spark version"""
 
-spark_version = "spark-1.4.1-bin-2.2.0"
+spark_version = "spark-1.5.0-bin-2.4.0"
 
 spark_executor_uri = (
     "http://downloads.mesosphere.com.s3.amazonaws.com/assets/spark/" +
@@ -10,4 +10,4 @@ spark_executor_uri = (
 
 PATH_ENV = 'PATH'
 
-spark_mesos_image = "mesosphere/spark:1.4.0-rc4-hdfs"
+spark_mesos_image = "mesosphere/spark:1.5.0-hadoop2.4"
