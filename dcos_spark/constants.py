@@ -1,4 +1,4 @@
-version = '0.3.0'
+version = '0.3.3'
 """DCOS Spark version"""
 
 spark_version = "spark-1.5.0-bin-2.4.0"
