@@ -107,7 +107,7 @@ def check_java_version(java_path):
 
     stdout, stderr = process.communicate()
 
-    lines = stderr.split(os.linesep)
+    lines = stderr.decode('utf8').split(os.linesep)
     if len(lines) == 0:
         print("Unable to check java version, error: no output detected from " + java_path + " -version")
         return False
