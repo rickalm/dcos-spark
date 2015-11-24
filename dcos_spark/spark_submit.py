@@ -63,20 +63,19 @@ def spark_dist():
     # <spark>
     root = posixpath.splitext(basename)[0]
 
+    # data/
+    data_dir = pkg_resources.resource_filename('dcos_spark', 'data')
+    if not os.path.exists(data_dir):
+        os.mkdir(data_dir)
+
     # data/<spark.tgz>
-    spark_archive = pkg_resources.resource_filename(
-        'dcos_spark',
-        os.path.join('data', basename))
+    spark_archive = os.path.join(data_dir, basename)
 
     # data/<spark>
-    spark_dir = pkg_resources.resource_filename(
-        'dcos_spark',
-        os.path.join('data', root))
+    spark_dir = os.path.join(data_dir, root)
 
     # data/tmp
-    data_tmp_dir = pkg_resources.resource_filename(
-        'dcos_spark',
-        os.path.join('data', 'tmp'))
+    data_tmp_dir = os.path.join(data_dir, 'tmp')
 
     # only download spark if data/<spark> doesn't yet exist
     if not os.path.exists(spark_dir):
