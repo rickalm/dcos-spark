@@ -26,20 +26,15 @@ from dcos_spark import constants, discovery, spark_submit, log
 def master():
     return discovery.get_spark_dispatcher()
 
-
 def run_spark_job(args):
-    docker_image = args.get('--docker-image', constants.spark_mesos_image)
-    if docker_image is None:
-        docker_image = constants.spark_mesos_image
+    docker_image = args.get('--docker-image') or spark_submit.spark_docker_image()
     return spark_submit.submit_job(master(), args['--submit-args'], docker_image, args['--verbose'])
 
 def show_spark_submit_help():
     return spark_submit.show_help()
 
-
 def job_status(args):
     return spark_submit.job_status(master(), args['<submissionId>'], args['--verbose'])
-
 
 def kill_job(args):
     return spark_submit.kill_job(master(), args['<submissionId>'], args['--verbose'])

@@ -2,11 +2,38 @@ from __future__ import print_function
 import json
 import os
 import os.path
+import posixpath
 import re
+import requests
+import tarfile
+import shutil
 import subprocess
+import sys
 
 import pkg_resources
+import dcos
 from dcos_spark import constants
+
+
+# singleton storing the spark marathon app
+app = None
+
+def spark_app():
+    global app
+    if app:
+        return app
+
+    marathon = dcos.marathon.create_client()
+    apps = marathon.get_apps()
+    for marathon_app in apps:
+        if marathon_app.get('labels', {}).get('DCOS_PACKAGE_NAME') == 'spark':
+            app = marathon_app
+            return app
+
+    if not app:
+        sys.stderr.write('No spark app found in marathon.  Quitting...\n')
+        sys.exit(1)
+
 
 def partition(args, pred):
     ain = []
@@ -18,10 +45,78 @@ def partition(args, pred):
             aout.append(x)
     return (ain, aout)
 
-def show_help():
-    submit_file = pkg_resources.resource_filename(
+
+def spark_docker_image():
+    return spark_app()['container']['docker']['image']
+
+
+def spark_dist():
+    """Returns the directory location of the local spark distribution.
+    Fetches it if it doesn't exist."""
+
+    app = spark_app()
+    spark_uri = app['labels']['SPARK_URI']
+
+    # <spark>.tgz
+    basename = posixpath.basename(spark_uri)
+
+    # <spark>
+    root = posixpath.splitext(basename)[0]
+
+    # data/<spark.tgz>
+    spark_archive = pkg_resources.resource_filename(
         'dcos_spark',
-        'data/' + constants.spark_version + '/bin/spark-submit')
+        os.path.join('data', basename))
+
+    # data/<spark>
+    spark_dir = pkg_resources.resource_filename(
+        'dcos_spark',
+        os.path.join('data', root))
+
+    # data/tmp
+    data_tmp_dir = pkg_resources.resource_filename(
+        'dcos_spark',
+        os.path.join('data', 'tmp'))
+
+    # only download spark if data/<spark> doesn't yet exist
+    if not os.path.exists(spark_dir):
+        # download archive
+        print('Spark distribution {} not found locally.'.format(root))
+        print('It looks like this is your first time running Spark!')
+        print('Downloading {}...'.format(spark_uri))
+
+        resp = requests.get(spark_uri, stream=True)
+        resp.raise_for_status()
+
+        # write to data/<spark.tgz>
+        with open(spark_archive, 'wb') as spark_archive_file:
+            for block in resp:
+                spark_archive_file.write(block)
+
+        # extract to data/tmp/<spark>
+        print('Extracting spark distribution {}...'.format(spark_archive))
+        tf = tarfile.open(spark_archive)
+        tf.extractall(data_tmp_dir)
+        tf.close()
+
+        # move from data/tmp/<spark> to data/<spark>
+        spark_tmp = os.path.join(data_tmp_dir, root)
+        shutil.copytree(spark_tmp, spark_dir)
+
+        # clean up data/tmp/<spark> and data/<spark.tgz>
+        shutil.rmtree(spark_tmp)
+        os.remove(spark_archive)
+        print('Successfully fetched spark distribution {}!'.format(spark_uri))
+
+    return spark_dir
+
+
+def spark_file(path):
+    return os.path.join(spark_dist(), path)
+
+
+def show_help():
+    submit_file = spark_file(os.path.join('bin', 'spark-submit'))
 
     command = [submit_file, "--help"]
 
@@ -148,9 +243,7 @@ def run(master, args, verbose, props = []):
     if not check_java():
         return (None, 1)
 
-    submit_file = pkg_resources.resource_filename(
-        'dcos_spark',
-        'data/' + constants.spark_version + '/bin/spark-submit')
+    submit_file = spark_file(os.path.join('bin', 'spark-submit'))
 
     command = [submit_file, "--deploy-mode", "cluster", "--master",
                "mesos://" + master] + args

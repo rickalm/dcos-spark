@@ -18,14 +18,3 @@ if [ ! -f "$BASEDIR/env/updated" -o $BASEDIR/setup.py -nt $BASEDIR/env/updated ]
 fi
 
 pip install -r $BASEDIR/requirements.txt
-
-SPARK_VERSION=spark-1.5.0-bin-2.4.0-28fb11ce902ca
-
-if [ ! -d "$BASEDIR/dcos_spark/data/$SPARK_VERSION" ]; then
-    pushd .
-    cd $BASEDIR/dcos_spark/data
-    wget http://downloads.mesosphere.com.s3.amazonaws.com/assets/spark/$SPARK_VERSION.tgz
-    tar xvf $SPARK_VERSION.tgz
-    rm $SPARK_VERSION.tgz
-    popd
-fi
