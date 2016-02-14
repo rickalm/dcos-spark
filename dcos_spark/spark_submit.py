@@ -9,6 +9,7 @@ import tarfile
 import shutil
 import subprocess
 import sys
+import urlparse
 
 import pkg_resources
 import dcos
@@ -49,6 +50,8 @@ def partition(args, pred):
 def spark_docker_image():
     return spark_app()['container']['docker']['image']
 
+def _spark_hdfs_url():
+    return spark_app()['labels'].get('SPARK_HDFS_CONFIG_URL')
 
 def spark_dist():
     """Returns the directory location of the local spark distribution.
@@ -134,9 +137,20 @@ def show_help():
     return 0
 
 
-def submit_job(master, args, docker_image, verbose = False):
+def submit_job(master, args, docker_image, verbose = False, hdfs = None):
     (props, args) = partition(args.split(" "), lambda a: a.startswith("-D"))
+
     props = props + ["-Dspark.mesos.executor.docker.image=" + docker_image]
+
+    hdfs_url = "{0}.mesos/config/".format(hdfs) if hdfs else _spark_hdfs_url()
+    if hdfs_url is not None:
+        if hdfs_url[-1] != '/':
+            hdfs_url += '/'
+        hdfs_config_url = urlparse.urljoin(hdfs_url, 'hdfs-config.xml')
+        site_config_url = urlparse.urljoin(hdfs_url, 'site-config.xml')
+        props = props + ["-Dspark.mesos.uris={0},{1}".format(hdfs_config_url,
+                                                             site_config_url)]
+
     response = run(master, args, verbose, props)
     if response[0] is not None:
         print("Run job succeeded. Submission id: " +
@@ -231,6 +245,13 @@ def check_java():
     return False
 
 
+def _get_command(master, args):
+    submit_file = spark_file(os.path.join('bin', 'spark-submit'))
+
+    return [submit_file, "--deploy-mode", "cluster", "--master",
+            "mesos://" + master] + args
+
+
 def run(master, args, verbose, props = []):
     """
     This method runs spark_submit with the passed in parameters.
@@ -242,21 +263,22 @@ def run(master, args, verbose, props = []):
     if not check_java():
         return (None, 1)
 
-    submit_file = spark_file(os.path.join('bin', 'spark-submit'))
+    command = _get_command(master, args)
 
-    command = [submit_file, "--deploy-mode", "cluster", "--master",
-               "mesos://" + master] + args
+    extra_env = {"SPARK_JAVA_OPTS": ' '.join(props)}
+    env = dict(os.environ, **extra_env)
 
     process = subprocess.Popen(
         command,
-        env = dict(os.environ, **{"SPARK_JAVA_OPTS": ' '.join(props)}),
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE)
+        env = env,
+        stdout = subprocess.PIPE,
+        stderr = subprocess.PIPE)
 
     stdout, stderr = process.communicate()
 
     if verbose is True:
         print("Ran command: " + " ".join(command))
+        print("With added env vars: {0}".format(extra_env))
         print("Stdout:")
         print(stdout)
         print("Stderr:")
