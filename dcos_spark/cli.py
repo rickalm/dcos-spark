@@ -6,9 +6,7 @@ Usage:
     dcos spark --version
     dcos spark --config-schema
     dcos spark run --help
-    dcos spark run --submit-args=<spark-args> [--docker-image=<docker-image>]
-                                              [--hdfs=<name>]
-                                              [--verbose]
+    dcos spark run --submit-args=<spark-args> [--docker-image=<docker-image> --verbose]
     dcos spark status <submissionId> [--verbose]
     dcos spark log <submissionId> [--follow --lines_count=<lines_count> --file=<file>]
     dcos spark kill <submissionId> [--verbose]
@@ -18,10 +16,6 @@ Options:
     --help                  Show this screen
     --info                  Show info
     --version               Show version
-
-    --hdfs=<name>           The name of the HDFS cluster to run spark jobs
-                            against.  By default, Spark will connect to
-                            DCOS HDFS.
 """
 from __future__ import print_function
 import docopt
@@ -34,7 +28,7 @@ def master():
 
 def run_spark_job(args):
     docker_image = args.get('--docker-image') or spark_submit.spark_docker_image()
-    return spark_submit.submit_job(master(), args['--submit-args'], docker_image, args['--verbose'], args['--hdfs'])
+    return spark_submit.submit_job(master(), args['--submit-args'], docker_image, args['--verbose'])
 
 def show_spark_submit_help():
     return spark_submit.show_help()

@@ -137,12 +137,12 @@ def show_help():
     return 0
 
 
-def submit_job(master, args, docker_image, verbose = False, hdfs = None):
+def submit_job(master, args, docker_image, verbose = False:
     (props, args) = partition(args.split(" "), lambda a: a.startswith("-D"))
 
     props = props + ["-Dspark.mesos.executor.docker.image=" + docker_image]
 
-    hdfs_url = "{0}.mesos/config/".format(hdfs) if hdfs else _spark_hdfs_url()
+    hdfs_url = _spark_hdfs_url()
     if hdfs_url is not None:
         if hdfs_url[-1] != '/':
             hdfs_url += '/'
