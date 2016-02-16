@@ -13,6 +13,7 @@ import urlparse
 
 import pkg_resources
 import dcos
+from six.moves import urllib
 from dcos_spark import constants
 
 
@@ -50,7 +51,7 @@ def partition(args, pred):
 def spark_docker_image():
     return spark_app()['container']['docker']['image']
 
-def _spark_hdfs_url():
+def _get_spark_hdfs_url():
     return spark_app()['labels'].get('SPARK_HDFS_CONFIG_URL')
 
 def spark_dist():
@@ -137,17 +138,18 @@ def show_help():
     return 0
 
 
-def submit_job(master, args, docker_image, verbose = False:
+def submit_job(master, args, docker_image, verbose = False):
     (props, args) = partition(args.split(" "), lambda a: a.startswith("-D"))
 
     props = props + ["-Dspark.mesos.executor.docker.image=" + docker_image]
 
-    hdfs_url = _spark_hdfs_url()
+    hdfs_url = _get_spark_hdfs_url()
     if hdfs_url is not None:
+        # ensure URL ends with '/'
         if hdfs_url[-1] != '/':
             hdfs_url += '/'
-        hdfs_config_url = urlparse.urljoin(hdfs_url, 'hdfs-config.xml')
-        site_config_url = urlparse.urljoin(hdfs_url, 'site-config.xml')
+        hdfs_config_url = urllib.parse.urljoin(hdfs_url, 'hdfs-config.xml')
+        site_config_url = urllib.parse.urljoin(hdfs_url, 'site-config.xml')
         props = props + ["-Dspark.mesos.uris={0},{1}".format(hdfs_config_url,
                                                              site_config_url)]
 

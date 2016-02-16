@@ -73,6 +73,7 @@ setup(
         'docopt',
         'toml',
         'requests',
+        'six>=1.9, <2.0'
     ],
 
     # List additional groups of dependencies here (e.g. development
