@@ -1,30 +1,33 @@
 from __future__ import print_function
+
 import json
 import os
 import os.path
 import posixpath
 import re
-import requests
-import tarfile
 import shutil
 import subprocess
 import sys
+import tarfile
 
-import pkg_resources
 import dcos
+import pkg_resources
+import requests
 from dcos_spark import constants
 
+from six.moves import urllib
 
 # singleton storing the spark marathon app
 app = None
+
 
 def spark_app():
     global app
     if app:
         return app
 
-    marathon = dcos.marathon.create_client()
-    apps = marathon.get_apps()
+    client = dcos.marathon.create_client()
+    apps = client.get_apps()
     for marathon_app in apps:
         if marathon_app.get('labels', {}).get('DCOS_PACKAGE_NAME') == 'spark':
             app = marathon_app
@@ -134,9 +137,21 @@ def show_help():
     return 0
 
 
-def submit_job(master, args, docker_image, verbose = False):
+def submit_job(master, args, docker_image, verbose=False):
     (props, args) = partition(args.split(" "), lambda a: a.startswith("-D"))
+
     props = props + ["-Dspark.mesos.executor.docker.image=" + docker_image]
+
+    hdfs_url = _get_spark_hdfs_url()
+    if hdfs_url is not None:
+        # urljoin only works as expected if the base URL ends with '/'
+        if hdfs_url[-1] != '/':
+            hdfs_url += '/'
+        hdfs_config_url = urllib.parse.urljoin(hdfs_url, 'hdfs-config.xml')
+        site_config_url = urllib.parse.urljoin(hdfs_url, 'site-config.xml')
+        props = props + ["-Dspark.mesos.uris={0},{1}".format(hdfs_config_url,
+                                                             site_config_url)]
+
     response = run(master, args, verbose, props)
     if response[0] is not None:
         print("Run job succeeded. Submission id: " +
@@ -144,7 +159,7 @@ def submit_job(master, args, docker_image, verbose = False):
     return response[1]
 
 
-def job_status(master, submissionId, verbose = False):
+def job_status(master, submissionId, verbose=False):
     response = run(master, ["--status", submissionId], verbose)
     if response[0] is not None:
         print("Submission ID: " + response[0]['submissionId'])
@@ -156,7 +171,7 @@ def job_status(master, submissionId, verbose = False):
     return response[1]
 
 
-def kill_job(master, submissionId, verbose = False):
+def kill_job(master, submissionId, verbose=False):
     response = run(master, ["--kill", submissionId], verbose)
     if response[0] is not None:
         if bool(response[0]['success']):
@@ -203,12 +218,14 @@ def check_java_version(java_path):
 
     lines = stderr.decode('utf8').split(os.linesep)
     if len(lines) == 0:
-        print("Unable to check java version, error: no output detected from " + java_path + " -version")
+        print("Unable to check java version, error: no output detected "
+              "from " + java_path + " -version")
         return False
 
     match = re.search("1\.(\d+)", lines[0])
     if match and int(match.group(1)) < 7:
-        print("DCOS Spark requires Java 1.7.x or greater to be installed, found " + lines[0])
+        print("DCOS Spark requires Java 1.7.x or greater to be installed, "
+              "found " + lines[0])
         return False
 
     return True
@@ -231,7 +248,7 @@ def check_java():
     return False
 
 
-def run(master, args, verbose, props = []):
+def run(master, args, verbose, props=[]):
     """
     This method runs spark_submit with the passed in parameters.
     ie: ./bin/spark-submit --deploy-mode cluster --class
@@ -242,14 +259,14 @@ def run(master, args, verbose, props = []):
     if not check_java():
         return (None, 1)
 
-    submit_file = spark_file(os.path.join('bin', 'spark-submit'))
+    command = _get_command(master, args)
 
-    command = [submit_file, "--deploy-mode", "cluster", "--master",
-               "mesos://" + master] + args
+    extra_env = {"SPARK_JAVA_OPTS": ' '.join(props)}
+    env = dict(os.environ, **extra_env)
 
     process = subprocess.Popen(
         command,
-        env = dict(os.environ, **{"SPARK_JAVA_OPTS": ' '.join(props)}),
+        env=env,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE)
 
@@ -257,6 +274,7 @@ def run(master, args, verbose, props = []):
 
     if verbose is True:
         print("Ran command: " + " ".join(command))
+        print("With added env vars: {0}".format(extra_env))
         print("Stdout:")
         print(stdout)
         print("Stderr:")
@@ -269,7 +287,8 @@ def run(master, args, verbose, props = []):
             return (None, process.returncode)
 
         if "500 Internal Server Error" in err:
-            print("Error reaching Spark cluster endpoint. Please make sure Spark service is in running state in Marathon.")
+            print("Error reaching Spark cluster endpoint. Please make sure "
+                  "Spark service is in running state in Marathon.")
             return (None, process.returncode)
 
         print("Spark submit failed:")
@@ -293,3 +312,14 @@ def run(master, args, verbose, props = []):
             response = json.loads(jsonStr)
             return (response, process.returncode)
         return (None, process.returncode)
+
+
+def _get_spark_hdfs_url():
+    return spark_app()['labels'].get('SPARK_HDFS_CONFIG_URL')
+
+
+def _get_command(master, args):
+    submit_file = spark_file(os.path.join('bin', 'spark-submit'))
+
+    return [submit_file, "--deploy-mode", "cluster", "--master",
+            "mesos://" + master] + args

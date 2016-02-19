@@ -2,7 +2,7 @@ import os
 from setuptools import setup, find_packages
 from codecs import open
 
-from dcos_spark import constants
+from dcos_spark import config
 
 
 here = os.path.abspath(os.path.dirname(__file__))
@@ -18,7 +18,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version=constants.version,
+    version=config.version,
 
     description='DCOS Spark Command Line Interface',
     long_description=long_description,
@@ -73,6 +73,7 @@ setup(
         'docopt',
         'toml',
         'requests',
+        'six>=1.9, <2.0'
     ],
 
     # List additional groups of dependencies here (e.g. development
