@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import json
+import logging
 import os
 import os.path
 import posixpath
@@ -9,16 +10,23 @@ import shutil
 import subprocess
 import sys
 import tarfile
+import threading
 
-import dcos
 import pkg_resources
 import requests
+from dcos import marathon, http, util
 from dcos_spark import constants
 
 from six.moves import urllib
+from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
 
 # singleton storing the spark marathon app
 app = None
+
+
+logging.basicConfig()
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
 
 
 def spark_app():
@@ -26,7 +34,7 @@ def spark_app():
     if app:
         return app
 
-    client = dcos.marathon.create_client()
+    client = marathon.create_client()
     apps = client.get_apps()
     for marathon_app in apps:
         if marathon_app.get('labels', {}).get('DCOS_PACKAGE_NAME') == 'spark':
@@ -259,11 +267,17 @@ def run(master, args, verbose, props=[]):
     if not check_java():
         return (None, 1)
 
+    token = _get_token()
+    proxy_thread = ProxyThread(token)
+    proxying = _should_proxy(master)
+    if proxying:
+        proxy_thread.start()
+        master = 'localhost:{}'.format(proxy_thread.port())
+
     command = _get_command(master, args)
 
     extra_env = {"SPARK_JAVA_OPTS": ' '.join(props)}
     env = dict(os.environ, **extra_env)
-
     process = subprocess.Popen(
         command,
         env=env,
@@ -271,6 +285,10 @@ def run(master, args, verbose, props=[]):
         stderr=subprocess.PIPE)
 
     stdout, stderr = process.communicate()
+
+    if proxying:
+        proxy_thread.proxy.shutdown()
+        proxy_thread.join()
 
     if verbose is True:
         print("Ran command: " + " ".join(command))
@@ -323,3 +341,85 @@ def _get_command(master, args):
 
     return [submit_file, "--deploy-mode", "cluster", "--master",
             "mesos://" + master] + args
+
+
+def _should_proxy(master):
+    resp = requests.get('http://' + master)
+    return resp.status_code == 401
+
+
+def _get_token():
+    dcos_url = util.get_config().get('core.dcos_url')
+    hostname = urllib.parse.urlparse(dcos_url).hostname
+    return http._get_dcos_acs_auth(None, None, hostname).token
+
+
+class ProxyThread(threading.Thread):
+    def __init__(self, token):
+        self.proxy = HTTPServer(('localhost', 0), ProxyHandler)
+        self.proxy._dcos_auth_token = token
+        super(ProxyThread, self).__init__()
+
+    def run(self):
+        self.proxy.serve_forever()
+
+    def port(self):
+        return self.proxy.socket.getsockname()[1]
+
+
+class ProxyHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self._request()
+
+    def do_POST(self):
+        self._request()
+
+    def _request(self):
+        self.server._dcos_auth_token
+        dcos_url = util.get_config().get('core.dcos_url')
+        url = dcos_url + '/service/sparkcli' + self.path
+        if self.headers.getheader('content-length'):
+            body = self.rfile.read(
+                int(self.headers.getheader('content-length')))
+            req = urllib.request.Request(url, body)
+        else:
+            body = ''
+            req = urllib.request.Request(url)
+
+        logger.debug('=== BEGIN REQUEST ===')
+        logger.debug(url)
+        logger.debug('\n')
+
+        for line in self.headers.headers:
+            key, value = line.strip().split(':', 1)
+            logger.debug('{0}:{1}'.format(key, value))
+            req.add_header(key, value)
+
+        req.add_header(
+            'Authorization',
+            'token={}'.format(self.server._dcos_auth_token))
+
+        logger.debug('\n')
+        logger.debug(body)
+
+        try:
+            resp = urllib.request.urlopen(req)
+        except urllib.error.HTTPError as e:
+            resp = e
+
+        self.send_response(resp.getcode())
+
+        logger.debug('=== BEGIN RESPONSE ===')
+        logger.debug(resp.getcode())
+
+        for header in resp.info().headers:
+            key, value = header.strip().split(':', 1)
+            self.send_header(key, value)
+            logger.debug('{0}:{1}'.format(key, value))
+        self.end_headers()
+
+        body = resp.read()
+        self.wfile.write(body)
+
+        logger.debug('\n')
+        logger.debug(body)
