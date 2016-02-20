@@ -267,9 +267,8 @@ def run(master, args, verbose, props=[]):
     if not check_java():
         return (None, 1)
 
-    token = _get_token()
-    proxy_thread = ProxyThread(token)
     proxying = _should_proxy(master)
+    proxy_thread = ProxyThread(_get_token() if proxying else None)
     if proxying:
         proxy_thread.start()
         master = 'localhost:{}'.format(proxy_thread.port())
