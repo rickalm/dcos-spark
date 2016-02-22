@@ -3,6 +3,7 @@ from dcos_spark import spark_submit
 
 import mock
 
+
 @mock.patch('subprocess.Popen')
 @mock.patch('dcos_spark.spark_submit.spark_app')
 def test_spark_hdfs_config_url(spark_app, Popen):
