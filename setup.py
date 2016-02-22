@@ -69,8 +69,7 @@ setup(
     # requirements files see:
     # https://packaging.python.org/en/latest/requirements.html
     install_requires=[
-        'dcos>=0.3.3, <1.0',
-        'dcoscli>=0.3.3',
+        'dcos>=0.3.4, <1.0',
         'docopt',
         'toml',
         'requests',
