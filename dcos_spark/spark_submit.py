@@ -14,7 +14,7 @@ import threading
 
 import pkg_resources
 import requests
-from dcos import marathon, http, util
+from dcos import http, marathon, util
 from dcos_spark import constants
 
 from six.moves import urllib
