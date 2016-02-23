@@ -240,15 +240,18 @@ def check_java_version(java_path):
 
 
 def check_java():
+    java_executable = 'java'
+    if util.is_windows_platform():
+        java_executable = java_executable + '.exe'
     # Check if JAVA is in the PATH
-    if which('java') is not None:
-        return check_java_version('java')
+    if which(java_executable) is not None:
+        return check_java_version(java_executable)
 
     # Check if JAVA_HOME is set and find java
     java_home = os.environ.get('JAVA_HOME')
 
     if java_home is not None:
-        java_path = os.path.join(java_home, "bin", "java")
+        java_path = os.path.join(java_home, "bin", java_executable)
         if os.path.isfile(java_path):
             return check_java_version(java_path)
 
@@ -313,7 +316,7 @@ def run(master, args, verbose, props=[]):
         return (None, process.returncode)
     else:
         if "{" in err:
-            lines = err.split(os.linesep)
+            lines = err.splitlines()
             jsonStr = ""
             startScan = False
             for l in lines:
@@ -336,7 +339,10 @@ def _get_spark_hdfs_url():
 
 
 def _get_command(master, args):
-    submit_file = spark_file(os.path.join('bin', 'spark-submit'))
+    spark_executable = 'spark-submit'
+    if util.is_windows_platform():
+        spark_executable = spark_executable + '.cmd'
+    submit_file = spark_file(os.path.join('bin', spark_executable))
 
     return [submit_file, "--deploy-mode", "cluster", "--master",
             "mesos://" + master] + args
