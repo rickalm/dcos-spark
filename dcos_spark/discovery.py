@@ -3,11 +3,12 @@ from __future__ import print_function
 import os
 
 from dcos import util
+from dcos_spark import service
 
 
 def get_spark_webui():
     base_url = util.get_config().get('core.dcos_url')
-    return base_url + '/service/spark/'
+    return base_url + '/service/' + service.app_id() + '/ui'
 
 
 def get_spark_dispatcher():
@@ -18,4 +19,4 @@ def get_spark_dispatcher():
     base_url = util.get_config().get('core.dcos_url')
     # Remove http:// prefix.
 
-    return base_url[7:] + '/service/sparkcli/'
+    return base_url[7:] + '/service/' + service.app_id() + '/'

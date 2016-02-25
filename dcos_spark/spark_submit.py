@@ -15,7 +15,7 @@ import threading
 import pkg_resources
 import requests
 from dcos import http, marathon, util
-from dcos_spark import constants
+from dcos_spark import constants, service
 
 from six.moves import urllib
 from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
@@ -37,7 +37,8 @@ def spark_app():
     client = marathon.create_client()
     apps = client.get_apps()
     for marathon_app in apps:
-        if marathon_app.get('labels', {}).get('DCOS_PACKAGE_NAME') == 'spark':
+        if marathon_app.get('labels', {}).get('DCOS_PACKAGE_FRAMEWORK_NAME') \
+           == service.app_id():
             app = marathon_app
             return app
 
