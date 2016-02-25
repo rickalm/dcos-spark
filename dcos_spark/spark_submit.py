@@ -240,9 +240,7 @@ def check_java_version(java_path):
 
 
 def check_java():
-    java_executable = 'java'
-    if util.is_windows_platform():
-        java_executable = java_executable + '.exe'
+    java_executable = 'java.exe' if util.is_windows_platform() else 'java'
     # Check if JAVA is in the PATH
     if which(java_executable) is not None:
         return check_java_version(java_executable)
@@ -339,9 +337,8 @@ def _get_spark_hdfs_url():
 
 
 def _get_command(master, args):
-    spark_executable = 'spark-submit'
-    if util.is_windows_platform():
-        spark_executable = spark_executable + '.cmd'
+    spark_executable = 'spark-submit.cmd' if util.is_windows_platform() \
+                                          else 'spark-submit'
     submit_file = spark_file(os.path.join('bin', spark_executable))
 
     return [submit_file, "--deploy-mode", "cluster", "--master",
