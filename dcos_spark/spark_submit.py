@@ -279,6 +279,9 @@ def run(master, args, verbose, props=[]):
 
     extra_env = {"SPARK_JAVA_OPTS": ' '.join(props)}
     env = dict(os.environ, **extra_env)
+    # On Windows python 2 complains about unicode in env
+    if util.is_windows_platform() and sys.version_info[0] < 3:
+        env = dict([str(key), str(value)] for key, value in env.iteritems())
     process = subprocess.Popen(
         command,
         env=env,
