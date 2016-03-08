@@ -19,6 +19,7 @@ from dcos_spark import constants
 
 from six.moves import urllib
 from six.moves.BaseHTTPServer import BaseHTTPRequestHandler, HTTPServer
+from six.moves.http_client import HTTPMessage
 
 # singleton storing the spark marathon app
 app = None
@@ -370,6 +371,7 @@ class ProxyThread(threading.Thread):
 
 
 class ProxyHandler(BaseHTTPRequestHandler):
+    MessageClass = HTTPMessage
     def do_GET(self):
         self._request()
 
@@ -380,9 +382,9 @@ class ProxyHandler(BaseHTTPRequestHandler):
         self.server._dcos_auth_token
         dcos_url = util.get_config().get('core.dcos_url')
         url = dcos_url + '/service/sparkcli' + self.path
-        if self.headers.getheader('content-length'):
+        if 'content-length' in self.headers:
             body = self.rfile.read(
-                int(self.headers.getheader('content-length')))
+                int(self.headers['content-length']))
             req = urllib.request.Request(url, body)
         else:
             body = ''
@@ -392,8 +394,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
         logger.debug(url)
         logger.debug('\n')
 
-        for line in self.headers.headers:
-            key, value = line.strip().split(':', 1)
+        for key, value in self.headers.items():
+            # key, value = line.strip().split(':', 1)
             logger.debug('{0}:{1}'.format(key, value))
             req.add_header(key, value)
 
@@ -414,8 +416,8 @@ class ProxyHandler(BaseHTTPRequestHandler):
         logger.debug('=== BEGIN RESPONSE ===')
         logger.debug(resp.getcode())
 
-        for header in resp.info().headers:
-            key, value = header.strip().split(':', 1)
+        for key, value in resp.info().items():
+            # key, value = header.strip().split(':', 1)
             self.send_header(key, value)
             logger.debug('{0}:{1}'.format(key, value))
         self.end_headers()
