@@ -25,8 +25,9 @@ Options:
 from __future__ import print_function
 
 import docopt
+import pkg_resources
 from dcos import mesos
-from dcos_spark import config, discovery, log, spark_submit
+from dcos_spark import discovery, log, spark_submit, version
 
 
 def master():
@@ -80,13 +81,16 @@ def print_webui(args):
 
 
 def print_schema():
-    print("{}")
+    schema = pkg_resources.resource_string(
+        'dcos_spark',
+        'data/config-schema/spark.json').decode('utf-8')
+    print(schema)
 
 
 def main():
     args = docopt.docopt(
         __doc__,
-        version='dcos-spark version {}'.format(config.version), help=False)
+        version='dcos-spark version {}'.format(version.version), help=False)
 
     if args['--info']:
         print(__doc__.split('\n')[0])

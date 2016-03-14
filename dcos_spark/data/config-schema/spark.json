@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json-schema.org/schema#",
+  "type": "object",
+  "properties": {
+    "app_id": {
+      "type": "string",
+      "title": "Spark App ID",
+      "description": "App ID that the Spark CLI is targetting to.",
+      "default": "spark"
+    }
+  },
+  "additionalProperties": false
+}
