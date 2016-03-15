@@ -394,6 +394,7 @@ class ProxyThread(threading.Thread):
 
 class ProxyHandler(BaseHTTPRequestHandler):
     MessageClass = HTTPMessage
+
     def do_GET(self):
         self._request()
 
