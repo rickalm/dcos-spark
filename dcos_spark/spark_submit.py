@@ -345,12 +345,30 @@ def _get_command(dispatcher, args):
                                           else 'spark-submit'
     submit_file = spark_file(os.path.join('bin', spark_executable))
 
+    if dispatcher.startswith("https://"):
+        dispatcher = "mesos-ssl://" + dispatcher[8:]
+    else:
+        dispatcher = "mesos://" + dispatcher[7:]
+
+    if _cert_verification():
+        ssl_ops = []
+    else:
+        ssl_ops = ["--conf", "spark.ssl.noCertVerification=true"]
+
     return [submit_file, "--deploy-mode", "cluster", "--master",
-            "mesos://" + dispatcher] + args
+            dispatcher] + ssl_ops + args
 
 
-def _should_proxy(master):
-    resp = requests.get('http://' + master)
+def _cert_verification():
+    try:
+        core_verify_ssl = util.get_config()['core.ssl_verify']
+        return str(core_verify_ssl).lower() in ['true', 'yes', '1']
+    except:
+        return True
+
+
+def _should_proxy(dispatcher):
+    resp = requests.get(dispatcher, verify=_cert_verification())
     return resp.status_code == 401
 
 
