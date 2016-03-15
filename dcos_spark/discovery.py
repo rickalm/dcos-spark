@@ -17,6 +17,4 @@ def get_spark_dispatcher():
         return dcos_spark_url
 
     base_url = util.get_config().get('core.dcos_url')
-    # Remove http:// prefix.
-
-    return base_url[7:] + '/service/' + service.app_id() + '/'
+    return base_url + '/service/' + service.app_id() + '/'

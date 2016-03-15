@@ -30,7 +30,7 @@ from dcos import mesos
 from dcos_spark import discovery, log, spark_submit, version
 
 
-def master():
+def dispatcher():
     return discovery.get_spark_dispatcher()
 
 
@@ -38,7 +38,7 @@ def run_spark_job(args):
     docker_image = args.get('--docker-image') or \
                    spark_submit.spark_docker_image()
     return spark_submit.submit_job(
-        master(),
+        dispatcher(),
         args['--submit-args'],
         docker_image,
         args['--verbose'])
@@ -50,14 +50,14 @@ def show_spark_submit_help():
 
 def job_status(args):
     return spark_submit.job_status(
-        master(),
+        dispatcher(),
         args['<submissionId>'],
         args['--verbose'])
 
 
 def kill_job(args):
     return spark_submit.kill_job(
-        master(),
+        dispatcher(),
         args['<submissionId>'],
         args['--verbose'])
 
