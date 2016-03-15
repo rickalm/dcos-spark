@@ -7,6 +7,6 @@
 set -e -x
 
 make clean env
-echo -e "version = '${VERSION}'\n" > dcos_spark/config.py
+echo -e "version = '${VERSION}'\n" > dcos_spark/version.py
 python setup.py bdist_wheel
 aws s3 cp dist/*.whl "${S3_URL}"
