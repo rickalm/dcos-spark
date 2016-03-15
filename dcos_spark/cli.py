@@ -109,7 +109,7 @@ def main():
     elif args['log']:
         return log_job(args)
     elif args['--help']:
-        print (__doc__)
+        print(__doc__)
         return 0
     else:
         print(__doc__)
