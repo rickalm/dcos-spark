@@ -146,7 +146,7 @@ def show_help():
     return 0
 
 
-def submit_job(master, args, docker_image, verbose=False):
+def submit_job(dispatcher, args, docker_image, verbose=False):
     (props, args) = partition(args.split(" "), lambda a: a.startswith("-D"))
 
     props = props + ["-Dspark.mesos.executor.docker.image=" + docker_image]
@@ -161,15 +161,15 @@ def submit_job(master, args, docker_image, verbose=False):
         props = props + ["-Dspark.mesos.uris={0},{1}".format(hdfs_config_url,
                                                              site_config_url)]
 
-    response = run(master, args, verbose, props)
+    response = run(dispatcher, args, verbose, props)
     if response[0] is not None:
         print("Run job succeeded. Submission id: " +
               response[0]['submissionId'])
     return response[1]
 
 
-def job_status(master, submissionId, verbose=False):
-    response = run(master, ["--status", submissionId], verbose)
+def job_status(dispatcher, submissionId, verbose=False):
+    response = run(dispatcher, ["--status", submissionId], verbose)
     if response[0] is not None:
         print("Submission ID: " + response[0]['submissionId'])
         print("Driver state: " + response[0]['driverState'])
@@ -180,8 +180,8 @@ def job_status(master, submissionId, verbose=False):
     return response[1]
 
 
-def kill_job(master, submissionId, verbose=False):
-    response = run(master, ["--kill", submissionId], verbose)
+def kill_job(dispatcher, submissionId, verbose=False):
+    response = run(dispatcher, ["--kill", submissionId], verbose)
     if response[0] is not None:
         if bool(response[0]['success']):
             success = "succeeded."
@@ -258,7 +258,7 @@ def check_java():
     return False
 
 
-def run(master, args, verbose, props=[]):
+def run(dispatcher, args, verbose, props=[]):
     """
     This method runs spark_submit with the passed in parameters.
     ie: ./bin/spark-submit --deploy-mode cluster --class
@@ -269,13 +269,13 @@ def run(master, args, verbose, props=[]):
     if not check_java():
         return (None, 1)
 
-    proxying = _should_proxy(master)
+    proxying = _should_proxy(dispatcher)
     proxy_thread = ProxyThread(_get_token() if proxying else None)
     if proxying:
         proxy_thread.start()
-        master = 'localhost:{}'.format(proxy_thread.port())
+        dispatcher = 'localhost:{}'.format(proxy_thread.port())
 
-    command = _get_command(master, args)
+    command = _get_command(dispatcher, args)
 
     extra_env = {"SPARK_JAVA_OPTS": ' '.join(props)}
     env = dict(os.environ, **extra_env)
@@ -340,17 +340,35 @@ def _get_spark_hdfs_url():
     return spark_app()['labels'].get('SPARK_HDFS_CONFIG_URL')
 
 
-def _get_command(master, args):
+def _get_command(dispatcher, args):
     spark_executable = 'spark-submit.cmd' if util.is_windows_platform() \
                                           else 'spark-submit'
     submit_file = spark_file(os.path.join('bin', spark_executable))
 
+    if dispatcher.startswith("https://"):
+        dispatcher = "mesos-ssl://" + dispatcher[8:]
+    else:
+        dispatcher = "mesos://" + dispatcher[7:]
+
+    if _cert_verification():
+        ssl_ops = []
+    else:
+        ssl_ops = ["--conf", "spark.ssl.noCertVerification=true"]
+
     return [submit_file, "--deploy-mode", "cluster", "--master",
-            "mesos://" + master] + args
+            dispatcher] + ssl_ops + args
 
 
-def _should_proxy(master):
-    resp = requests.get('http://' + master)
+def _cert_verification():
+    try:
+        core_verify_ssl = util.get_config()['core.ssl_verify']
+        return str(core_verify_ssl).lower() in ['true', 'yes', '1']
+    except:
+        return True
+
+
+def _should_proxy(dispatcher):
+    resp = requests.get(dispatcher, verify=_cert_verification())
     return resp.status_code == 401
 
 

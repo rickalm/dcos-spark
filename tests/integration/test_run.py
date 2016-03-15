@@ -16,7 +16,7 @@ def test_spark_hdfs_config_url(spark_app, Popen):
     proc.communicate = mock.MagicMock(return_value=(six.b(''), six.b('')))
     Popen.return_value = proc
 
-    spark_submit.submit_job('fake.com', '', '')
+    spark_submit.submit_job('http://fake.com', '', '')
 
     args, kwargs = Popen.call_args
     assert '-Dspark.mesos.uris={0}/{1},{0}/{2}'.format(
