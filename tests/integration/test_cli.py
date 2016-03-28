@@ -7,3 +7,11 @@ def test_help():
 
     assert returncode == 0
     assert stderr == b''
+
+
+def test_config_schema():
+    returncode, stdout, stderr = exec_command(
+        ['dcos-spark', 'spark', '--config-schema'])
+
+    assert returncode == 0
+    assert stderr == b''

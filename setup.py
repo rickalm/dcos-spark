@@ -103,4 +103,10 @@ setup(
             'dcos-spark=dcos_spark.cli:main',
         ],
     },
+
+    package_data={
+        'dcos_spark': [
+            'data/config-schema/spark.json'
+        ]
+    }
 )
