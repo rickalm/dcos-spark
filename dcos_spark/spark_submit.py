@@ -274,7 +274,7 @@ def run(dispatcher, args, verbose, props=[]):
     proxy_thread = ProxyThread(_get_token() if proxying else None)
     if proxying:
         proxy_thread.start()
-        dispatcher = 'localhost:{}'.format(proxy_thread.port())
+        dispatcher = 'http://localhost:{}'.format(proxy_thread.port())
 
     command = _get_command(dispatcher, args)
 
