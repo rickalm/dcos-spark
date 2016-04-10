@@ -4,6 +4,7 @@ import os
 
 from dcos import util
 from dcos_spark import service
+from six.moves import urllib
 
 
 def get_spark_webui():
@@ -17,4 +18,4 @@ def get_spark_dispatcher():
         return dcos_spark_url
 
     base_url = util.get_config().get('core.dcos_url')
-    return base_url + '/service/' + service.app_id() + '/'
+    return urllib.parse.urljoin(base_url, '/service/' + service.app_id() + '/')

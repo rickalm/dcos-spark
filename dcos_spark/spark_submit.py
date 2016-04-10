@@ -271,10 +271,10 @@ def run(dispatcher, args, verbose, props=[]):
         return (None, 1)
 
     proxying = _should_proxy(dispatcher)
-    proxy_thread = ProxyThread(_get_token() if proxying else None)
+    proxy_thread = ProxyThread(_get_token() if proxying else None, dispatcher)
     if proxying:
         proxy_thread.start()
-        dispatcher = 'localhost:{}'.format(proxy_thread.port())
+        dispatcher = 'http://localhost:{}'.format(proxy_thread.port())
 
     command = _get_command(dispatcher, args)
 
@@ -380,8 +380,9 @@ def _get_token():
 
 
 class ProxyThread(threading.Thread):
-    def __init__(self, token):
+    def __init__(self, token, dispatcher):
         self.proxy = HTTPServer(('localhost', 0), ProxyHandler)
+        self.proxy.dispatcher = dispatcher
         self.proxy._dcos_auth_token = token
         super(ProxyThread, self).__init__()
 
@@ -403,8 +404,12 @@ class ProxyHandler(BaseHTTPRequestHandler):
 
     def _request(self):
         self.server._dcos_auth_token
-        dcos_url = util.get_config().get('core.dcos_url')
-        url = dcos_url + '/service/sparkcli' + self.path
+
+        url = self.server.dispatcher
+        if url.endswith('/'):
+            url = url[:-1]
+        url = url + self.path
+
         if 'content-length' in self.headers:
             body = self.rfile.read(
                 int(self.headers['content-length']))
