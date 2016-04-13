@@ -376,7 +376,7 @@ def _should_proxy(dispatcher):
 def _get_token():
     dcos_url = util.get_config().get('core.dcos_url')
     hostname = urllib.parse.urlparse(dcos_url).hostname
-    return http._get_dcos_acs_auth(None, None, hostname).token
+    return http._get_dcos_auth(None, None, None, hostname).token
 
 
 class ProxyThread(threading.Thread):
