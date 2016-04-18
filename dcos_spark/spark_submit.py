@@ -418,6 +418,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 body = ''
             req = urllib.request.Request(url, body)
         else:
+            body = ''
             req = urllib.request.Request(url)
 
         logger.debug('=== BEGIN REQUEST ===')
