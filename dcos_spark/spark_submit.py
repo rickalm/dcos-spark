@@ -6,6 +6,7 @@ import os
 import os.path
 import posixpath
 import re
+import six
 import shutil
 import subprocess
 import sys
@@ -415,10 +416,10 @@ class ProxyHandler(BaseHTTPRequestHandler):
                 body = self.rfile.read(
                     int(self.headers['content-length']))
             else:
-                body = ''
+                body = six.b('')
             req = urllib.request.Request(url, body)
         else:
-            body = ''
+            body = six.b('')
             req = urllib.request.Request(url)
 
         logger.debug('=== BEGIN REQUEST ===')
