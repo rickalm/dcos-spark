@@ -21,5 +21,5 @@ def test_spark_hdfs_config_url(spark_app, Popen):
     args, kwargs = Popen.call_args
     assert '-Dspark.mesos.uris={0}/{1},{0}/{2}'.format(
         base_url,
-        'hdfs-config.xml',
-        'site-config.xml') in kwargs['env']['SPARK_JAVA_OPTS']
+        'hdfs-site.xml',
+        'core-site.xml') in kwargs['env']['SPARK_JAVA_OPTS']
