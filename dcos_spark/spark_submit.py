@@ -157,8 +157,8 @@ def submit_job(dispatcher, args, docker_image, verbose=False):
         # urljoin only works as expected if the base URL ends with '/'
         if hdfs_url[-1] != '/':
             hdfs_url += '/'
-        hdfs_config_url = urllib.parse.urljoin(hdfs_url, 'hdfs-config.xml')
-        site_config_url = urllib.parse.urljoin(hdfs_url, 'site-config.xml')
+        hdfs_config_url = urllib.parse.urljoin(hdfs_url, 'hdfs-site.xml')
+        site_config_url = urllib.parse.urljoin(hdfs_url, 'core-site.xml')
         props = props + ["-Dspark.mesos.uris={0},{1}".format(hdfs_config_url,
                                                              site_config_url)]
 
@@ -397,12 +397,12 @@ class ProxyHandler(BaseHTTPRequestHandler):
     MessageClass = HTTPMessage
 
     def do_GET(self):
-        self._request()
+        self._request('GET')
 
     def do_POST(self):
-        self._request()
+        self._request('POST')
 
-    def _request(self):
+    def _request(self, method):
         self.server._dcos_auth_token
 
         url = self.server.dispatcher
@@ -410,12 +410,14 @@ class ProxyHandler(BaseHTTPRequestHandler):
             url = url[:-1]
         url = url + self.path
 
-        if 'content-length' in self.headers:
-            body = self.rfile.read(
-                int(self.headers['content-length']))
+        if method == 'POST':
+            if 'content-length' in self.headers:
+                body = self.rfile.read(
+                    int(self.headers['content-length']))
+            else:
+                body = ''
             req = urllib.request.Request(url, body)
         else:
-            body = ''
             req = urllib.request.Request(url)
 
         logger.debug('=== BEGIN REQUEST ===')
