@@ -41,6 +41,27 @@ When invoking dcos subcommands from the dev env it includes the :code:`dcos-` as
 
     deactivate
 
+Binary:
+-----------
+
+Create Binary:
+##############
+
+#. Install pyinstaller::
+
+   pip install pyinstaller
+
+#. Create spark cli binary::
+
+   make binary
+
+Run Binary:
+###########
+
+#. Update `PATH` to have the dcos-spark binary. The created binary is is in folder `dist`::
+
+   PATH=/path/to/binary:$PATH
+
 Running Tests:
 --------------
 
