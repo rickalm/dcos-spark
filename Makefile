@@ -12,7 +12,7 @@ test:
 packages:
 	bin/packages.sh
 
-binary: env
+binary:
 	pyinstaller binary/binary.spec
 
 .PHONY: binary
