@@ -41,6 +41,21 @@ When invoking dcos subcommands from the dev env it includes the :code:`dcos-` as
 
     deactivate
 
+Binary:
+-----------
+
+Create Binary:
+##############
+
+#. Install pyinstaller::
+
+   pip install pyinstaller
+
+#. Create spark cli binary::
+
+   make binary
+
+
 Running Tests:
 --------------
 
