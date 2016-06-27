@@ -1,4 +1,6 @@
-#!/bin/bash -e
+#!/bin/bash
+
+set -eux
 
 BASEDIR=`dirname $0`/..
 
@@ -8,7 +10,13 @@ if [ ! -d "$BASEDIR/env" ]; then
 fi
 
 cd $BASEDIR
-source $BASEDIR/env/bin/activate
+
+if [ -f "$BASEDIR/env/bin/activate" ]; then
+    source $BASEDIR/env/bin/activate
+else
+    $BASEDIR/env/Scripts/activate
+fi
+
 echo "Virtualenv activated."
 
 if [ ! -f "$BASEDIR/env/updated" -o $BASEDIR/setup.py -nt $BASEDIR/env/updated ]; then
