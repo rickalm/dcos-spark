@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-set -o errexit -o nounset -o pipefail
+set -eux
 
 BASEDIR=`dirname $0`/..
 
