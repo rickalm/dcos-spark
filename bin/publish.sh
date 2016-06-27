@@ -5,9 +5,9 @@
 
 set -eux -o pipefail
 
-#export VERSION=${GIT_BRANCH#refs/tags/}
-export S3_URL=s3://downloads.mesosphere.io/spark/assets/cli/"${PLATFORM}"
+export VERSION="${GIT_BRANCH#refs/tags/}"
+export S3_URL="s3://downloads.mesosphere.io/spark/assets/cli/${VERSION}/${PLATFORM}"
 
-#echo -e "version = '${VERSION}'\n" > dcos_spark/version.py
+echo -e "version = '${VERSION}'\n" > dcos_spark/version.py
 make clean binary
 aws s3 cp dist/dcos-spark "${S3_URL}"
