@@ -12,5 +12,7 @@ test:
 packages:
 	bin/packages.sh
 
-binary:  clean env packages
-		bin/binary.sh
+binary: env
+	pyinstaller binary/binary.spec
+
+.PHONY: binary

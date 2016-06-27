@@ -4,5 +4,6 @@ BASEDIR=`dirname $0`/..
 
 cd $BASEDIR
 
-PATH=$(pwd)/dist:$PATH
+# no idea why this is necessary
+# PATH=$(pwd)/dist:$PATH
 $BASEDIR/env/bin/tox

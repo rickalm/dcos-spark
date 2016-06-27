@@ -55,12 +55,6 @@ Create Binary:
 
    make binary
 
-Run Binary:
-###########
-
-#. Update `PATH` to have the dcos-spark binary. The created binary is is in folder `dist`::
-
-   PATH=/path/to/binary:$PATH
 
 Running Tests:
 --------------
