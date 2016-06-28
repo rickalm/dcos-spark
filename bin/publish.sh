@@ -3,7 +3,7 @@
 # env vars
 #   PLATFORM (e.g. linux-x86-64)
 
-set -eux -o pipefail
+set -ex -o pipefail
 
 export VERSION="${GIT_BRANCH#refs/tags/}"
 export S3_URL="s3://downloads.mesosphere.io/spark/assets/cli/${VERSION}/${PLATFORM}/dcos-spark"

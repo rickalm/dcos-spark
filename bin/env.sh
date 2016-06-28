@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -eux
+set -ex
 
 BASEDIR=`dirname $0`/..
 
@@ -8,8 +8,6 @@ if [ ! -d "$BASEDIR/env" ]; then
     virtualenv -q $BASEDIR/env --prompt='(dcos-spark) '
     echo "Virtualenv created."
 fi
-
-cd $BASEDIR
 
 if [ -f "$BASEDIR/env/bin/activate" ]; then
     source $BASEDIR/env/bin/activate
