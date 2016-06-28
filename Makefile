@@ -3,7 +3,7 @@ all: env test binary
 clean:
 	bin/clean.sh
 
-env:
+env: clean
 	bin/env.sh
 
 test:
@@ -12,7 +12,7 @@ test:
 packages:
 	bin/packages.sh
 
-binary:
+binary: env
 	pyinstaller binary/binary.spec
 
 .PHONY: binary
