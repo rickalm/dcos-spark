@@ -1,1 +1,1 @@
-version = '0.5.15'
+version = 'SNAPSHOT'
