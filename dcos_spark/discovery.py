@@ -2,13 +2,13 @@ from __future__ import print_function
 
 import os
 
-from dcos import util
+from dcos import config
 from dcos_spark import service
 from six.moves import urllib
 
 
 def get_spark_webui():
-    base_url = util.get_config().get('core.dcos_url')
+    base_url = config.get_config().get('core.dcos_url')
     return base_url + '/service/' + service.app_id() + '/ui'
 
 
@@ -17,5 +17,5 @@ def get_spark_dispatcher():
     if dcos_spark_url is not None:
         return dcos_spark_url
 
-    base_url = util.get_config().get('core.dcos_url')
+    base_url = config.get_config().get('core.dcos_url')
     return urllib.parse.urljoin(base_url, '/service/' + service.app_id() + '/')

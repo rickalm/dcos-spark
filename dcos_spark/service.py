@@ -1,9 +1,9 @@
-from dcos import config, util
+from dcos import config
 
 
 def app_id():
     try:
-        return util.get_config()["spark.app_id"]
+        return config.get_config()["spark.app_id"]
     except KeyError:
         return "spark"
 

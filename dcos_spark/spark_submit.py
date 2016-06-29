@@ -8,6 +8,7 @@ import posixpath
 import re
 import six
 import shutil
+import ssl
 import subprocess
 import sys
 import tarfile
@@ -15,7 +16,7 @@ import threading
 
 import pkg_resources
 import requests
-from dcos import http, marathon, util
+from dcos import http, marathon, util, config
 from dcos_spark import constants, service
 
 from six.moves import urllib
@@ -98,7 +99,7 @@ def spark_dist():
         print('It looks like this is your first time running Spark!')
         print('Downloading {}...'.format(spark_uri))
 
-        resp = requests.get(spark_uri, stream=True)
+        resp = http.request('GET', spark_uri, stream=True)
         resp.raise_for_status()
 
         # write to data/<spark.tgz>
@@ -363,7 +364,7 @@ def _get_command(dispatcher, args):
 
 def _cert_verification():
     try:
-        core_verify_ssl = util.get_config()['core.ssl_verify']
+        core_verify_ssl = config.get_config()['core.ssl_verify']
         return str(core_verify_ssl).lower() in ['true', 'yes', '1']
     except:
         return True
@@ -375,7 +376,7 @@ def _should_proxy(dispatcher):
 
 
 def _get_token():
-    dcos_url = util.get_config().get('core.dcos_url')
+    dcos_url = config.get_config().get('core.dcos_url')
     hostname = urllib.parse.urlparse(dcos_url).hostname
     return http._get_dcos_auth(None, None, None, hostname).token
 
@@ -438,8 +439,13 @@ class ProxyHandler(BaseHTTPRequestHandler):
         logger.debug('\n')
         logger.debug(body)
 
+        ctx = ssl.create_default_context()
+        if not _cert_verification():
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+
         try:
-            resp = urllib.request.urlopen(req)
+            resp = urllib.request.urlopen(req, context = ctx)
         except urllib.error.HTTPError as e:
             resp = e
 
