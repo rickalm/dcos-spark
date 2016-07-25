@@ -65,6 +65,12 @@ def spark_docker_image():
     return spark_app()['container']['docker']['image']
 
 
+def _spark_dist_dir():
+    dist_dir = config.get_config().get('spark.distribution_directory',
+                                       '~/.dcos/spark/dist')
+    return os.path.expanduser(dist_dir)
+
+
 def spark_dist():
     """Returns the directory location of the local spark distribution.
     Fetches it if it doesn't exist."""
@@ -79,9 +85,9 @@ def spark_dist():
     root = posixpath.splitext(basename)[0]
 
     # data/
-    data_dir = pkg_resources.resource_filename('dcos_spark', 'data')
+    data_dir = _spark_dist_dir()
     if not os.path.exists(data_dir):
-        os.mkdir(data_dir)
+        os.makedirs(data_dir)
 
     # data/<spark.tgz>
     spark_archive = os.path.join(data_dir, basename)
