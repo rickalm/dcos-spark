@@ -4,12 +4,13 @@ clean:
 	bin/clean.sh
 
 env: clean
+	bin/set_version.sh
 	bin/env.sh
 
 test:
 	bin/test.sh
 
-packages:
+packages: binary
 	bin/packages.sh
 
 binary: env
