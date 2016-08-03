@@ -14,7 +14,7 @@ import sys
 import tarfile
 import threading
 
-import pkg_resources
+# import pkg_resources
 import requests
 from dcos import http, marathon, util, config
 from dcos_spark import constants, service
@@ -451,7 +451,7 @@ class ProxyHandler(BaseHTTPRequestHandler):
             ctx.verify_mode = ssl.CERT_NONE
 
         try:
-            resp = urllib.request.urlopen(req, context = ctx)
+            resp = urllib.request.urlopen(req, context=ctx)
         except urllib.error.HTTPError as e:
             resp = e
 
