@@ -6,17 +6,15 @@ import os
 import os.path
 import posixpath
 import re
-import six
 import shutil
 import ssl
 import subprocess
 import sys
 import tarfile
 import threading
-
-# import pkg_resources
 import requests
-from dcos import http, marathon, util, config
+import six
+from dcos import config, http, marathon, util
 from dcos_spark import constants, service
 
 from six.moves import urllib
